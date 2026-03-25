@@ -1,0 +1,925 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kabarak Alert Command — Admin Dashboard</title>
+  <link rel="stylesheet" href="ndex.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🛡️</div>
+    <div>
+      <div class="logo-text">KABARAK ALERT</div>
+      <div class="logo-sub">Command Center</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Navigation</div>
+
+    <div class="nav-item active" onclick="scrollToSection('dashboard', this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="scrollToSection('security-alerts', this)">
+      <span class="nav-icon">🔴</span> Security Alerts
+      <span class="nav-badge red" id="nav-count-security">0</span>
+    </div>
+    <div class="nav-item" onclick="scrollToSection('medical-alerts', this)">
+      <span class="nav-icon">🔵</span> Medical Alerts
+      <span class="nav-badge blue" id="nav-count-medical">0</span>
+    </div>
+    <div class="nav-item" onclick="scrollToSection('fire-alerts', this)">
+      <span class="nav-icon">🟡</span> Fire Alerts
+      <span class="nav-badge yellow" id="nav-count-fire">0</span>
+    </div>
+    <div class="nav-item" onclick="scrollToSection('location-map', this)">
+      <span class="nav-icon">📍</span> Location Map
+    </div>
+    <div class="nav-item" onclick="scrollToSection('reports', this)">
+      <span class="nav-icon">📋</span> Reports
+    </div>
+  </div>
+
+</aside>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-title">🛡️ &nbsp;Alert Command Dashboard</div>
+    <div class="topbar-time" id="clock">--:--:--</div>
+    <div class="topbar-actions">
+      <div class="alert-bell-wrap">
+        <div class="btn-icon alert-bell" onclick="toggleAlertPanel()">🔔<div class="bell-dot"></div></div>
+        <div class="alert-dropdown hidden" id="alert-dropdown"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <div class="content">
+
+    <!-- STAT CARDS -->
+    <div class="stats-row" id="dashboard">
+      <div class="stat-card red">
+        <div class="stat-header">
+          <div>
+            <div class="stat-label">Security Alerts</div>
+          </div>
+          <div class="stat-icon red">🔴</div>
+        </div>
+        <div class="stat-value red" id="count-security">0</div>
+        <div class="stat-sub">Active incidents</div>
+        <div class="stat-trend up" id="trend-security">↑ 0 today</div>
+      </div>
+
+      <div class="stat-card blue">
+        <div class="stat-header">
+          <div>
+            <div class="stat-label">Medical Alerts</div>
+          </div>
+          <div class="stat-icon blue">🩺</div>
+        </div>
+        <div class="stat-value blue" id="count-medical">0</div>
+        <div class="stat-sub">Requires attention</div>
+        <div class="stat-trend up" id="trend-medical">↑ 0 today</div>
+      </div>
+
+      <div class="stat-card yellow">
+        <div class="stat-header">
+          <div>
+            <div class="stat-label">Fire Alerts</div>
+          </div>
+          <div class="stat-icon yellow">🔥</div>
+        </div>
+        <div class="stat-value yellow" id="count-fire">0</div>
+        <div class="stat-sub">Critical priority</div>
+        <div class="stat-trend up" id="trend-fire">↑ 0 today</div>
+      </div>
+
+      <div class="stat-card total">
+        <div class="stat-header">
+          <div>
+            <div class="stat-label">Total Alerts</div>
+          </div>
+          <div class="stat-icon total">📊</div>
+        </div>
+        <div class="stat-value" id="count-total">0</div>
+        <div class="stat-sub">All types combined</div>
+        <div class="stat-trend down" id="trend-resolved">✓ 0 resolved</div>
+      </div>
+    </div><!-- /stats-row -->
+
+    <!-- TWO-COL: Alert Table + Submit Form -->
+    <div class="two-col">
+
+      <!-- ALERT TABLE PANEL -->
+      <div class="panel" id="security-alerts">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="pulse-ring red"></span>
+            Live Alert Feed
+          </div>
+          <div class="panel-actions">
+            <button class="btn-sm" onclick="clearResolved()">Clear Resolved</button>
+            <button class="btn-sm primary" onclick="exportAlerts()">⬇ Export</button>
+          </div>
+        </div>
+
+        <!-- Alert sections -->
+        <div class="alert-sections">
+          <div class="alert-section security" id="sec-section">
+            <div class="alert-section-title">🔴 Security Alerts</div>
+            <div class="alert-list" id="alert-list-security"></div>
+          </div>
+          <div class="alert-section medical" id="medical-alerts">
+            <div class="alert-section-title">🩺 Medical Alerts</div>
+            <div class="alert-list" id="alert-list-medical"></div>
+          </div>
+          <div class="alert-section fire" id="fire-alerts">
+            <div class="alert-section-title">🔥 Fire Alerts</div>
+            <div class="alert-list" id="alert-list-fire"></div>
+          </div>
+        </div>
+      </div><!-- /panel -->
+
+    </div><!-- /two-col -->
+<div class="panel" id="dispatch-orders">
+  <div class="panel-header">
+    <div class="panel-title">🚨 Dispatch Orders</div>
+  </div>
+  <div class="panel-body">
+    <form id="dispatchForm">
+      <label class="form-label" for="orderDetails">Order Details:</label>
+      <textarea class="form-textarea" id="orderDetails" name="orderDetails" rows="4" required></textarea>
+
+      <label class="form-label" for="authorizedBy">Authorized By:</label>
+      <input class="form-input" type="text" id="authorizedBy" name="authorizedBy" placeholder="Admin Name" required>
+
+      <button class="btn-submit" type="submit">Submit Dispatch</button>
+    </form>
+
+    <div id="dispatchLog" style="margin-top:20px;">
+      <h3 class="form-label">Dispatch Log</h3>
+      <!-- Entries will appear here -->
+    </div>
+  </div>
+</div>
+<!--activity ofthe dispatcher-->
+<div class="panel" id="activity-feed-panel">
+  <div class="panel-header">
+    <div class="panel-title">📜 Activity Feed</div>
+  </div>
+  <div class="panel-body">
+    <div id="activity-feed">
+      <div style="font-size:12px;color:var(--text-dim);">No activity yet.</div>
+    </div>
+  </div>
+</div>
+
+    <!-- MAP PANEL -->
+    <div class="map-panel" id="location-map">
+      <div class="panel-header">
+        <div class="panel-title">📍 &nbsp;Kabarak Campus — Alert Map</div>
+        <div class="panel-actions">
+          <button class="btn-sm">Satellite</button>
+          <button class="btn-sm">All Zones</button>
+        </div>
+      </div>
+      <div class="map-body">
+        <div class="map-placeholder" id="map-area" onclick="captureLocation()" title="Click to capture your current location">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31918.415884428934!2d35.95245833044543!3d-0.16395247982975725!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1829f6f367bba6d9%3A0x363c14244dccdde!2sKabarak%20University!5e0!3m2!1sen!2ske!4v1773837357324!5m2!1sen!2ske" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <div id="map-live-pin" class="map-live-pin" title="Captured location"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row" id="reports">
+
+      <!-- REPORTS -->
+      <div class="panel" id="reports-panel">
+        <div class="panel-header">
+          <div class="panel-title">📄 &nbsp;Reports</div>
+          <div class="panel-actions">
+            <button class="btn-sm" onclick="exportAlerts()">Export CSV</button>
+            <button class="btn-sm" onclick="copyReport()">Copy</button>
+          </div>
+        </div>
+        <div class="report-body">
+          <div class="report-summary" id="report-summary">No export generated yet.</div>
+          <textarea id="report-output" class="report-output" readonly placeholder="Exported CSV will appear here..."></textarea>
+        </div>
+      </div>
+
+
+    </div><!-- /bottom-row -->
+
+  </div><!-- /content -->
+</main>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+/* ── State ────────────────────────────────────────────────── */
+const STORAGE_KEY = 'resq_alerts';
+const API_BASE     = 'http://127.0.0.1:3000';
+let alerts = [];
+let selectedType = null;
+let resolvedCount = 0;
+
+async function loadStoredAlerts() {
+  // Local cache (offline fallback)
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        alerts = parsed.map(a => ({
+          ...a,
+          status: a.status || 'active',
+          timeStr: a.timeStr || (a.timestamp ? new Date(a.timestamp).toLocaleTimeString('en-KE', { hour12: false }) : ''),
+        }));
+        resolvedCount = alerts.filter(a => a.status === 'resolved').length;
+      }
+    } catch (e) {
+      console.warn('Unable to parse stored alerts', e);
+    }
+  }
+
+  // Attempt to load from backend (if running)
+  try {
+    const resp = await fetch(`${API_BASE}/api/alerts/all`);
+    if (resp.ok) {
+      const backendAlerts = await resp.json();
+      if (Array.isArray(backendAlerts) && backendAlerts.length > 0) {
+        alerts = backendAlerts.map(a => ({
+          id: a.id || a.alertId || `b-${Math.random().toString(16).slice(2)}`,
+          type: a.type || a.emergencyType || 'security',
+          desc: a.situation || a.description || '',
+          situation: a.situation || a.description || '',
+          zone: a.zone || 'Kabarak Campus',
+          coords: a.location ? `${a.location.lat}, ${a.location.lng}` : (a.coords || ''),
+          status: a.status || 'active',
+          timeStr: a.createdAt || a.timeStr || (a.timestamp ? new Date(a.timestamp).toLocaleTimeString('en-KE', { hour12: false }) : ''),
+        }));
+        resolvedCount = alerts.filter(a => a.status === 'resolved').length;
+        // keep local cache in sync
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
+      }
+    }
+  } catch (e) {
+    // backend unavailable; continue using local cache
+  }
+}
+
+function saveAlerts() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
+}
+
+const ZONES = [
+  'Main Gate', 'Library Block', 'Science Complex',
+  'Student Center', 'Halls A', 'Halls B',
+  'Sports Ground', 'Admin Block', 'Cafeteria'
+];
+
+const PIN_POSITIONS = [
+  { top: '30%', left: '18%' }, { top: '22%', left: '38%' },
+  { top: '35%', left: '58%' }, { top: '20%', left: '72%' },
+  { top: '62%', left: '22%' }, { top: '65%', left: '45%' },
+  { top: '60%', left: '67%' }, { top: '42%', left: '34%' },
+  { top: '50%', left: '80%' },
+];
+
+/* ── Clock ─────────────────────────────────────────────────── */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-KE', { hour12: false }) +
+    ' EAT';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ── Type selector ─────────────────────────────────────────── */
+function selectType(type) {
+  selectedType = type;
+  ['security','medical','fire'].forEach(t => {
+    document.getElementById('type-' + t).classList.toggle('selected', t === type);
+  });
+}
+
+/* ── Capture GPS ───────────────────────────────────────────── */
+function captureLocation() {
+  const btn = document.querySelector('.btn-loc');
+  btn.textContent = '⏳';
+  if (!navigator.geolocation) {
+    document.getElementById('field-coords').value = 'Geolocation not supported';
+    setMapPinVisible(false);
+    btn.textContent = '📍';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude: lat, longitude: lng, accuracy: acc } = pos.coords;
+      document.getElementById('field-coords').value =
+        `${lat.toFixed(5)}, ${lng.toFixed(5)} (±${Math.round(acc)}m)`;
+      btn.textContent = '✅';
+      setMapPinVisible(true);
+      setTimeout(() => btn.textContent = '📍', 2000);
+    },
+    () => {
+      /* Fallback: Kabarak campus coords */
+      document.getElementById('field-coords').value = '-0.20862, 35.96231 (Kabarak Campus)';
+      setMapPinVisible(true);
+      btn.textContent = '📍';
+    },
+    { enableHighAccuracy: true, timeout: 8000 }
+  );
+}
+
+function setMapPinVisible(visible) {
+  const pin = document.getElementById('map-live-pin');
+  if (!pin) return;
+  pin.classList.toggle('active', visible);
+}
+
+/* ── Submit Alert ──────────────────────────────────────────── */
+function submitAlert() {
+  const name   = document.getElementById('field-name').value.trim();
+  const idNo   = document.getElementById('field-id').value.trim();
+  const zone   = document.getElementById('field-zone').value;
+  const coords = document.getElementById('field-coords').value.trim();
+  const desc   = document.getElementById('field-desc').value.trim();
+
+  /* Validate */
+  if (!selectedType)  { shake('type-security'); alert('⚠️ Please select an alert type.'); return; }
+  if (!name)          { shake('field-name');    alert('⚠️ Student name is required.'); return; }
+  if (!zone)          { shake('field-zone');    alert('⚠️ Please select a campus zone.'); return; }
+  if (!desc)          { shake('field-desc');    alert('⚠️ Please provide a description.'); return; }
+
+  const now = new Date();
+  const alert_obj = {
+    id:     Date.now(),
+    type:   selectedType,
+    name,
+    idNo,
+    zone,
+    coords: coords || 'Not captured',
+    desc,
+    time:   now,
+    timeStr: now.toLocaleTimeString('en-KE', { hour12: false }),
+    status: 'active'
+  };
+
+  alerts.unshift(alert_obj);
+  saveAlerts();
+  renderAll();
+  showToast(alert_obj);
+  addFeedItem(alert_obj);
+  resetForm();
+
+  const banner = document.getElementById('success-banner');
+  banner.classList.add('show');
+  setTimeout(() => banner.classList.remove('show'), 4000);
+}
+
+/* ── Render All ────────────────────────────────────────────── */
+function renderAll() {
+  renderStats();
+  renderAlertList();
+  renderNavBadges();
+  renderReport();
+}
+
+/* ── Render Stats ──────────────────────────────────────────── */
+function renderStats() {
+  const s = alerts.filter(a => a.type === 'security').length;
+  const m = alerts.filter(a => a.type === 'medical').length;
+  const f = alerts.filter(a => a.type === 'fire').length;
+  const t = alerts.length;
+
+  document.getElementById('count-security').textContent = s;
+  document.getElementById('count-medical').textContent  = m;
+  document.getElementById('count-fire').textContent     = f;
+  document.getElementById('count-total').textContent    = t;
+
+  document.getElementById('trend-security').textContent = `↑ ${s} today`;
+  document.getElementById('trend-medical').textContent  = `↑ ${m} today`;
+  document.getElementById('trend-fire').textContent     = `↑ ${f} today`;
+  document.getElementById('trend-resolved').textContent = `✓ ${resolvedCount} resolved`;
+
+  updateMapBlink();
+}
+
+/* ── Map Blink ───────────────────────────────────────────────
+ * When an active alert exists, pulse the map panel so it draws attention.
+ */
+function updateMapBlink() {
+  const mapPanel = document.getElementById('location-map');
+  if (!mapPanel) return;
+  const hasActive = alerts.some(a => a.status === 'active');
+  mapPanel.classList.toggle('alert-active', hasActive);
+}
+
+/* ── Render Nav Badges ─────────────────────────────────────── */
+function renderNavBadges() {
+  const s = alerts.filter(a => a.type === 'security' && a.status === 'active').length;
+  const m = alerts.filter(a => a.type === 'medical'  && a.status === 'active').length;
+  const f = alerts.filter(a => a.type === 'fire'     && a.status === 'active').length;
+  document.getElementById('nav-count-security').textContent = s;
+  document.getElementById('nav-count-medical').textContent  = m;
+  document.getElementById('nav-count-fire').textContent     = f;
+}
+
+function setActiveNav(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+function scrollToSection(id, navEl) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setActiveNav(navEl);
+}
+
+/* ── Render Alert List ─────────────────────────────────────── */
+const TYPE_META = {
+  security: { label: '🔴 Security', cls: 'security' },
+  medical:  { label: '🩺 Medical',  cls: 'medical'  },
+  fire:     { label: '🔥 Fire',     cls: 'fire'     },
+};
+
+function renderAlertList() {
+  const containers = {
+    security: document.getElementById('alert-list-security'),
+    medical: document.getElementById('alert-list-medical'),
+    fire: document.getElementById('alert-list-fire'),
+  };
+
+  ['security','medical','fire'].forEach(type => {
+    // Only show active/pending alerts in the live list (resolved ones are cleared)
+    const list = alerts.filter(a => a.type === type && a.status !== 'resolved');
+    const container = containers[type];
+    if (!container) return;
+
+    if (list.length === 0) {
+      container.innerHTML = `<div class="alert-empty">No ${type} alerts — monitoring active</div>`;
+      return;
+    }
+
+    container.innerHTML = list.map(a => {
+      const m = TYPE_META[a.type] || { label: a.type?.toUpperCase() || 'ALERT', cls: 'security' };
+      const desc = a.desc || a.situation || 'No description';
+      const name = a.name || 'Unknown';
+      const idNo = a.idNo || '';
+      const zone = a.zone || 'Unknown';
+      const timeStr = a.timeStr || (a.timestamp ? new Date(a.timestamp).toLocaleTimeString('en-KE', { hour12: false }) : '—');
+
+      const respondBtn = `<button class="btn-action btn-respond" onclick="respondAlert(${a.id})">Respond</button>`;
+
+      return `
+      <div class="alert-row" id="row-${a.id}">
+        <div><span class="alert-type-badge ${m.cls}">${m.label}</span></div>
+        <div class="alert-desc">
+          ${escHtml(desc.substring(0,60))}${desc.length>60?'…':''}
+          <span>${escHtml(name)}${idNo ? ' · ' + escHtml(idNo) : ''}</span>
+        </div>
+        <div class="alert-location">${escHtml(zone)}</div>
+        <div class="alert-time">${timeStr}</div>
+        <div class="alert-actions">
+          ${respondBtn}
+        </div>
+      </div>`;
+    }).join('');
+  });
+
+  updateMapBlink();
+}
+
+function respondAlert(id) {
+  const a = alerts.find(x => x.id === id);
+  if (!a) return;
+
+  // Mark as resolved so it disappears from the live list
+  if (a.status !== 'resolved') {
+    a.status = 'resolved';
+    resolvedCount++;
+    saveAlerts();
+    renderAll();
+    addSystemFeed(`Alert #${id} resolved and cleared from live feed`);
+    flashRow(id);
+  }
+}
+
+function flashRow(id) {
+  const row = document.getElementById(`row-${id}`);
+  if (!row) return;
+  row.classList.add('flash');
+  setTimeout(() => row.classList.remove('flash'), 550);
+}
+
+/* ── Map Pins ──────────────────────────────────────────────── */
+const ZONE_PIN_MAP = {
+  'Main Gate':         { top: '25%', left: '10%' },
+  'Library Block':     { top: '30%', left: '28%' },
+  'Science Complex':   { top: '20%', left: '48%' },
+  'Student Center':    { top: '50%', left: '38%' },
+  'Halls of Residence A': { top: '65%', left: '18%' },
+  'Halls of Residence B': { top: '65%', left: '55%' },
+  'Sports Ground':     { top: '72%', left: '72%' },
+  'Administration Block': { top: '22%', left: '68%' },
+  'Chapel':            { top: '42%', left: '60%' },
+  'Cafeteria':         { top: '55%', left: '50%' },
+  'Off-Campus':        { top: '15%', left: '85%' },
+};
+
+const TYPE_PIN_CLS = { security: 'red', medical: 'blue', fire: 'yellow' };
+const TYPE_PIN_EMOJI = { security: '🔴', medical: '🩺', fire: '🔥' };
+
+function renderMapPins() {
+  const container = document.getElementById('map-pins');
+  const emptyMsg  = document.getElementById('map-empty-msg');
+
+  if (alerts.filter(a => a.status !== 'resolved').length === 0) {
+    container.innerHTML = '';
+    emptyMsg.style.display = 'block';
+    return;
+  }
+
+  emptyMsg.style.display = 'none';
+
+  /* Group active/pending by zone — last one wins position */
+  const pinMap = {};
+  alerts.filter(a => a.status !== 'resolved').forEach(a => {
+    pinMap[a.zone] = a;
+  });
+
+  container.innerHTML = Object.values(pinMap).map(a => {
+    const pos = ZONE_PIN_MAP[a.zone] || { top: '50%', left: '50%' };
+    const cls = TYPE_PIN_CLS[a.type];
+    const emoji = TYPE_PIN_EMOJI[a.type];
+    return `<div class="map-pin" style="top:${pos.top};left:${pos.left};" title="${escHtml(a.desc)}">
+      <div class="pin-dot ${cls}"><span>${emoji}</span></div>
+      <div class="pin-label">${escHtml(a.zone)}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Zone Grid ─────────────────────────────────────────────── */
+function renderZoneGrid() {
+  const grid = document.getElementById('zone-grid');
+  const zoneCounts = {};
+  ZONES.forEach(z => zoneCounts[z] = { security:0, medical:0, fire:0 });
+
+  alerts.filter(a => a.status !== 'resolved').forEach(a => {
+    const z = a.zone;
+    // Map form values to display names
+    const key = ZONES.find(z2 => a.zone.startsWith(z2.replace(/\s.*/, '').substring(0,5))) || a.zone;
+    if (zoneCounts[key]) zoneCounts[key][a.type]++;
+    else if (zoneCounts[a.zone]) zoneCounts[a.zone][a.type]++;
+  });
+
+  // recount properly
+  const zc2 = {};
+  ZONES.forEach(z => zc2[z] = { security:0, medical:0, fire:0 });
+  alerts.filter(a => a.status !== 'resolved').forEach(a => {
+    const match = ZONES.find(z => a.zone === z || a.zone.includes(z.split(' ')[0]));
+    if (match) zc2[match][a.type]++;
+  });
+
+  grid.innerHTML = ZONES.map(z => {
+    const c = zc2[z];
+    const total = c.security + c.medical + c.fire;
+    let alertCls = '', countHtml = '';
+    if (c.security > 0) { alertCls = 'alert-red';    countHtml = `<div class="zone-count red">${c.security}</div><div class="zone-status">🔴 Security</div>`; }
+    else if (c.medical > 0) { alertCls = 'alert-blue'; countHtml = `<div class="zone-count blue">${c.medical}</div><div class="zone-status">🩺 Medical</div>`; }
+    else if (c.fire > 0)    { alertCls = 'alert-yellow'; countHtml = `<div class="zone-count yellow">${c.fire}</div><div class="zone-status">🔥 Fire</div>`; }
+    else { countHtml = `<div class="zone-count safe">—</div><div class="zone-status">Clear</div>`; }
+
+    return `<div class="zone-card ${alertCls}">
+      <div class="zone-name">${z}</div>
+      ${countHtml}
+    </div>`;
+  }).join('');
+}
+
+/* ── Activity Feed ─────────────────────────────────────────── */
+const TYPE_FEED_CLS = { security: 'red', medical: 'blue', fire: 'yellow' };
+const TYPE_FEED_LABEL = { security: '🔴 Security alert', medical: '🩺 Medical alert', fire: '🔥 Fire alert' };
+
+function addFeedItem(a) {
+  const feed = document.getElementById('activity-feed');
+  const empty = feed.querySelector('div[style]');
+  if (empty) feed.innerHTML = '';
+  const cls = TYPE_FEED_CLS[a.type];
+  const now = new Date().toLocaleTimeString('en-KE', { hour12: false });
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `
+    <div class="feed-dot-wrap">
+      <div class="feed-dot ${cls}"></div>
+      <div class="feed-line"></div>
+    </div>
+    <div class="feed-content">
+      <div class="feed-msg"><strong>${TYPE_FEED_LABEL[a.type]}</strong> submitted by ${escHtml(a.name)} at ${escHtml(a.zone)}</div>
+      <div class="feed-time">${now} · ${escHtml(a.desc.substring(0,50))}${a.desc.length>50?'…':''}</div>
+    </div>`;
+  feed.insertBefore(item, feed.firstChild);
+  renderAlertDropdown();
+}
+
+function addSystemFeed(msg) {
+  const feed = document.getElementById('activity-feed');
+  const now = new Date().toLocaleTimeString('en-KE', { hour12: false });
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `
+    <div class="feed-dot-wrap">
+      <div class="feed-dot green"></div>
+      <div class="feed-line"></div>
+    </div>
+    <div class="feed-content">
+      <div class="feed-msg" style="color:var(--text-secondary)">${escHtml(msg)}</div>
+      <div class="feed-time">${now} · System</div>
+    </div>`;
+  feed.insertBefore(item, feed.firstChild);
+}
+
+/* ── Toast ─────────────────────────────────────────────────── */
+const TOAST_META = {
+  security: { icon: '🔴', title: 'SECURITY ALERT',  cls: 'security' },
+  medical:  { icon: '🩺', title: 'MEDICAL ALERT',   cls: 'medical'  },
+  fire:     { icon: '🔥', title: 'FIRE ALERT',       cls: 'fire'     },
+};
+
+function showToast(a) {
+  const m = TOAST_META[a.type];
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${m.cls}`;
+  el.innerHTML = `
+    <div class="toast-icon">${m.icon}</div>
+    <div>
+      <div class="toast-title">${m.title}</div>
+      <div class="toast-msg">${escHtml(a.zone)} · ${escHtml(a.name)}</div>
+    </div>
+    <div class="toast-progress"></div>`;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+/* ── Helpers ───────────────────────────────────────────────── */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function shake(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'shake 0.4s ease';
+}
+
+function resetForm() {
+  selectedType = null;
+  ['security','medical','fire'].forEach(t => document.getElementById('type-' + t).classList.remove('selected'));
+  ['field-name','field-id','field-coords','field-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('field-zone').value = '';
+  setMapPinVisible(false);
+}
+
+function clearResolved() {
+  alerts = alerts.filter(a => a.status !== 'resolved');
+  saveAlerts();
+  addSystemFeed('Resolved alerts cleared from view.');
+  renderAll();
+}
+
+function getReportCsv() {
+  const rows = [['ID','Type','Name','ID/Phone','Zone','Coords','Description','Time','Status']];
+  alerts.forEach(a => rows.push([a.id, a.type, a.name, a.idNo, a.zone, a.coords, a.desc, a.timeStr, a.status]));
+  return rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+}
+
+function renderReport() {
+  const csv = getReportCsv();
+  const count = csv ? csv.split('\n').length - 1 : 0;
+  const summary = `Showing ${count} alerts (exported as CSV)`;
+  document.getElementById('report-summary').textContent = summary;
+  document.getElementById('report-output').value = csv;
+}
+
+function exportAlerts() {
+  const csv = getReportCsv();
+  if (!csv) { alert('No alerts to export.'); return; }
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = `kabarak-alerts-${Date.now()}.csv`;
+  link.click(); URL.revokeObjectURL(url);
+  renderReport();
+}
+
+function copyReport() {
+  const output = document.getElementById('report-output');
+  output.select();
+  document.execCommand('copy');
+  showInfoToast('CSV copied to clipboard');
+}
+
+function showInfoToast(message) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `
+    <div class="toast-icon">ℹ️</div>
+    <div>
+      <div class="toast-title">Info</div>
+      <div class="toast-msg">${message}</div>
+    </div>
+    <div class="toast-progress"></div>`;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function renderAlertDropdown() {
+  const container = document.getElementById('alert-dropdown');
+  if (!container) return;
+  const active = alerts.filter(a => a.status === 'active');
+  if (active.length === 0) {
+    container.innerHTML = '<div class="dropdown-title">No active alerts</div><div style="font-size:12px;color:var(--text-dim);">All clear.</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="dropdown-title">Active Alerts (${active.length})</div>
+    ${active.map(a => {
+      const dotCls = a.type === 'security' ? 'red' : a.type === 'medical' ? 'blue' : 'yellow';
+      const time = a.timeStr || (a.timestamp ? new Date(a.timestamp).toLocaleTimeString('en-KE', { hour12: false }) : '');
+      const label = a.desc || a.situation || a.type;
+      return `
+        <div class="dropdown-item">
+          <div class="dropdown-dot ${dotCls}"></div>
+          <div class="dropdown-content">
+            <div>${escHtml(label)}</div>
+            <div class="dropdown-time">${time}</div>
+          </div>
+        </div>`;
+    }).join('')}
+  `;
+}
+
+function toggleAlertPanel() {
+  const panel = document.getElementById('alert-dropdown');
+  if (!panel) return;
+  const open = !panel.classList.contains('hidden');
+  if (open) {
+    panel.classList.add('hidden');
+    return;
+  }
+  renderAlertDropdown();
+  panel.classList.remove('hidden');
+}
+
+// Close the alert panel when clicking outside
+document.addEventListener('click', (event) => {
+  const panel = document.getElementById('alert-dropdown');
+  const bell = document.querySelector('.alert-bell');
+  if (!panel || !bell) return;
+  if (panel.classList.contains('hidden')) return;
+  if (panel.contains(event.target) || bell.contains(event.target)) return;
+  panel.classList.add('hidden');
+});
+
+/* ── CSS shake keyframe (injected) ──────────────────────────── */
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes shake {
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-6px); }
+    40%{ transform:translateX(6px); }
+    60%{ transform:translateX(-4px); }
+    80%{ transform:translateX(4px); }
+  }`;
+document.head.appendChild(style);
+
+/* ── Init zone grid ─────────────────────────────────────────── */
+(async () => {
+  await loadStoredAlerts();
+  renderAll();
+  setActiveNav(document.querySelector('.nav-item.active'));
+  renderDispatchDropdown();
+  loadStoredDispatches();
+  localStorage.removeItem('resq_dispatches');
+
+})();
+// ── Dispatch Orders Logic ───────────────────────────────
+const dispatchForm = document.getElementById('dispatchForm');
+const dispatchLog = document.getElementById('dispatchLog');
+
+if (dispatchForm) {
+  dispatchForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const order = document.getElementById('orderDetails').value.trim();
+    const admin = document.getElementById('authorizedBy').value.trim();
+
+    if (!order || !admin) {
+      alert("⚠️ Please fill in all fields.");
+      return;
+    }
+
+    const entry = document.createElement('div');
+    entry.className = "dispatch-entry";
+    const now = new Date().toLocaleTimeString('en-KE', { hour12: false });
+    entry.textContent = `Order: ${order} | Authorized by: ${admin} | Time: ${now}`;
+
+    dispatchLog.appendChild(entry);
+
+    // Save structured dispatch order
+    const dispatch_obj = {
+      id: Date.now(),
+      order,
+      admin,
+      timeStr: now,
+      status: 'active'
+    };
+    let dispatches = JSON.parse(localStorage.getItem('resq_dispatches') || '[]');
+    dispatches.unshift(dispatch_obj);
+    localStorage.setItem('resq_dispatches', JSON.stringify(dispatches));
+    addDispatchFeed(dispatch_obj);
+
+    dispatchForm.reset();
+  });
+}
+ // ── Render Dispatch Dropdown ───────────────────────────────
+function renderDispatchDropdown() {
+  const container = document.getElementById('dispatch-dropdown');
+  if (!container) return;
+
+  let dispatches = JSON.parse(localStorage.getItem('resq_dispatches') || '[]');
+  if (dispatches.length === 0) {
+    container.innerHTML = `
+      <div class="dropdown-title">No dispatches</div>
+      <div style="font-size:12px;color:var(--text-dim);">All clear.</div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="dropdown-title">Active Dispatches (${dispatches.length})</div>
+    ${dispatches.map(d => `
+      <div class="dropdown-item">
+        <div class="dropdown-dot green"></div>
+        <div class="dropdown-content">
+          <div>${escHtml(d.order)}</div>
+          <div class="dropdown-time">${d.timeStr} · Authorized by ${escHtml(d.admin)}</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+// ── Add Dispatch to Activity Feed ───────────────────────────────
+function addDispatchFeed(d) {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `
+    <div class="feed-dot-wrap">
+      <div class="feed-dot green"></div>
+      <div class="feed-line"></div>
+    </div>
+    <div class="feed-content">
+      <div class="feed-msg"><strong>🚨 Dispatch Order</strong> authorized by ${escHtml(d.admin)}</div>
+      <div class="feed-time">${d.timeStr} · ${escHtml(d.order)}</div>
+    </div>
+  `;
+
+  feed.insertBefore(item, feed.firstChild);
+}
+function loadStoredDispatches() {
+  let dispatches = JSON.parse(localStorage.getItem('resq_dispatches') || '[]');
+  dispatches.forEach(d => addDispatchFeed(d));
+}
+</script>
+</body>
+</html>
